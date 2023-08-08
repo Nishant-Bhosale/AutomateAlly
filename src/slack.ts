@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import { parse } from "querystring";
-import { slackApi } from "./util/slack";
+import { slackApi, verifySlackRequest } from "./util/slack";
 
 const handleSlashCommand = async (payload: SlackSlashCommandPayload) => {
   switch (payload.command) {
@@ -25,8 +25,12 @@ const handleSlashCommand = async (payload: SlackSlashCommandPayload) => {
 };
 
 export const handler: Handler = async (event) => {
-  // TODO validate the Slack request
+  // validate the Slack request
+  const valid = verifySlackRequest(event);
 
+  if (!valid) {
+    return { statusCode: 400, body: "Invalid Request!" };
+  }
   // handle slash commands
   const body = parse(event.body ?? "") as SlackPayload;
   if (body.command) {
